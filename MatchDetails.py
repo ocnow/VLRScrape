@@ -3,8 +3,9 @@ import re
 from bs4 import BeautifulSoup
 
 class MatchDetails:
-    def __init__(self,html_text):
+    def __init__(self,html_text,mtch_id):
         self.html_txt = html_text
+        self.match_id = mtch_id
 
     def getTourDF(self,match_id,matchHeader):
         tourAndTime = self.getTourAndTime(matchHeader)
@@ -54,7 +55,7 @@ class MatchDetails:
         #html_txt = requests.get(MATCH_URL).text
         mapstats = BeautifulSoup(self.html_txt, 'html.parser').find_all("div",class_="col-container")[0].find("div",class_="mod-3",recursive=False)
 
-        match_id = MATCH_URL.split("/")[-2]
+        #match_id = selMATCH_URL.split("/")[-2]
 
         matchHeader = mapstats.find("div",class_='match-header')
-        return self.getTourDF(match_id,matchHeader)
+        return self.getTourDF(self.match_id,matchHeader)

@@ -19,24 +19,24 @@ class VLRDF:
     def __init__(self):
         self.MATCH_URLS = []
 
-    def saveCSV(self,matchArr,gameArr,excptnArr):
+    def saveCSV(self,matchArr,gameArr,excptnArr,savedir):
         if len(matchArr) > 0:
             matchDF = pd.DataFrame(matchArr)
             matchDF.columns = VLRDF.MatchCols
-            matchDF.to_csv('results/matches.csv',index=False)
+            matchDF.to_csv(savedir + 'matches.csv',index=False)
 
         if len(gameArr) > 0:
             gameDF = pd.DataFrame(gameArr)
             gameDF.columns = VLRDF.GameCols
-            gameDF.to_csv('results/games.csv',index=False)
+            gameDF.to_csv(savedir+ 'games.csv',index=False)
 
         if len(excptnArr) > 0:
             exceptDF = pd.DataFrame(excptnArr)
             exceptDF.columns = ['EXCEPTION_URL']
-            exceptDF.to_csv('results/exception.csv',index=False)
+            exceptDF.to_csv(savedir +'exception.csv',index=False)
 
-    def prepareMTCHURLS(self):
-        for i in range(10):
+    def prepareMTCHURLS(self,fromPage,toPage):
+        for i in range(fromPage,toPage):
             html_txt = requests.get(VLRDF.MATCH_LIST_URL.format(i+1)).text
             soup = BeautifulSoup(html_txt, 'html.parser')
             match_divs = soup.find(id="wrapper").find_all("a", class_="match-item")
@@ -45,25 +45,38 @@ class VLRDF:
 
     def dataOfMATCH(self,MATCH_URL):
         html_txt = requests.get(MATCH_URL).text
+        match_id = MATCH_URL.split("/")[-2]
 
-        mtchDetails = MatchDetails(html_txt)
+        mtchDetails = MatchDetails(html_txt,match_id)
         matchDet = mtchDetails.getDetails()
 
-        mpDetails = MapDetails(html_txt)
+        mpDetails = MapDetails(html_txt,match_id)
         gameDets = mpDetails.getDetails()
         return matchDet,gameDets
 
-    def getData(self,test=False):
-        self.prepareMTCHURLS()
+    def getData(self,fromPage = 0,toPage = 10,test=False,savedir=''):
+        self.prepareMTCHURLS(fromPage,toPage)
         matchArr = []
         gameArr = []
         exceptionArr = []
 
         endLength = len(self.MATCH_URLS)
         if test:
-            endLength = 3
+            endLength = 10
 
         for MATCH_URL in tqdm(self.MATCH_URLS[:endLength]):
+            try:
+                matchDet,gameDets = self.dataOfMATCH(MATCH_URL)
+                if len(matchDet) == 9:
+                    matchArr.append(matchDet)
+                for gameDet in gameDets:
+                    if len(gameDet) == 185:
+                        gameArr.append(gameDet)
+
+            except Exception:
+                exceptionArr.append(MATCH_URL)
+            #print("done-"+MATCH_URL.split("/")[-1])
+            '''
             try:
                 matchDet,gameDets = self.dataOfMATCH(MATCH_URL)
                 if len(matchDet) == 9:
@@ -74,5 +87,5 @@ class VLRDF:
             except Exception:
                 exceptionArr.append(MATCH_URL)
             #print("done-"+MATCH_URL.split("/")[-1])
-
-        self.saveCSV(matchArr,gameArr,exceptionArr)
+            '''
+        self.saveCSV(matchArr,gameArr,exceptionArr,savedir)

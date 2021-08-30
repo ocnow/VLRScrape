@@ -3,8 +3,9 @@ import re
 from bs4 import BeautifulSoup
 
 class MapDetails:
-    def __init__(self,html_text):
+    def __init__(self,html_text,mtch_id):
         self.html_txt = html_text
+        self.match_id = mtch_id
 
     def cleanStr(self,st):
         return st.strip().replace('\t','').replace('\n','')
@@ -124,5 +125,5 @@ class MapDetails:
         allStats = BeautifulSoup(self.html_txt, 'html.parser').find_all("div",class_="col-container")[0].find("div",class_="mod-3",recursive=False)
 
 
-        match_id = MATCH_URL.split("/")[-2]
-        return self.getMapDF(match_id,allStats)
+        #match_id = MATCH_URL.split("/")[-2]
+        return self.getMapDF(self.match_id,allStats)
